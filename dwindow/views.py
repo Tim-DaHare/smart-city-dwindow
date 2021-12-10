@@ -15,6 +15,7 @@ def dataReadings(request):
             "temprature": reading[2],
             "eco2": reading[3],
             "tvoc": reading[4],
+            "measured_at": reading[1]
         })
 
     return JsonResponse({"data-readings": readingsJson})
