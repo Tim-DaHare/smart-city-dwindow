@@ -7,7 +7,7 @@ def dataReadings(request):
     conn = create_connection(r"sensor_dataset.db")
     # FIXME: check for missing conn and handle error
 
-    readings = getLastReadings(conn, 20)
+    readings = getLastReadings(conn, 10)
 
     readingsJson = []
     for reading in readings:
