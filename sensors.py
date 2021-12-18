@@ -102,9 +102,17 @@ GPIO.setup(C4, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 #SERVO
 # servo = Servo(18, min_pulse_width=0.5/1000, max_pulse_width=2.5/1000,pin_factory=factory)
 
-# GPIO.output(red, GPIO.LOW)
-# GPIO.output(green, GPIO.LOW)
-# GPIO.output(blue, GPIO.LOW)
+red = 16
+green = 24
+blue = 12
+
+GPIO.setup(red, GPIO.OUT)
+GPIO.setup(green, GPIO.OUT)
+GPIO.setup(blue, GPIO.OUT)
+
+GPIO.output(red, GPIO.LOW)
+GPIO.output(green, GPIO.LOW)
+GPIO.output(blue, GPIO.LOW)
 
 keyPadNumber = "1"
 workingKeypadNumbers = ["1", "2", "3", "4"]
@@ -301,5 +309,5 @@ def main(delay = 0.5):
             time.sleep(delay)
         except KeyboardInterrupt:
             print("\nApplication stopped!")
-        
+
 main()
