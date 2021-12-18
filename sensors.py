@@ -18,7 +18,7 @@ import db as db
 import random
 from gpiozero import Buzzer
 
-#OLED
+# oled setup
 serial = i2c(port=1, address=0x3C)
 # device = sh1106(serial)
 # device.rotate = 0 #ligt aan je display, kan 0, 1, 2, 3 zijn
@@ -29,9 +29,6 @@ i2c = busio.I2C(board.SCL, board.SDA)
 # bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c, debug=False)
 
 # factory = PiGPIOFactory()
-# change this to match the location's pressure (hPa) at sea level
-# bme680.sea_level_pressure = 1013.25
-rgbPins = {'pinRed': 26, 'pinGreen': 19, 'pinBlue': 13}
 
 #SGP30
 i2cSGP = busio.I2C(board.SCL, board.SDA, frequency=100000)
@@ -49,7 +46,7 @@ devices = i2c.scan()
 
 oled_addr = 0x3c
 
-# Tygo/prototype
+# set numberpad pins
 L1 = 26
 L2 = 19
 L3 = 5 
@@ -60,35 +57,16 @@ C2 = 22
 C3 = 17
 C4 = 27 
 
-# GPIO.setmode(GPIO.BOARD)
-# for i in rgbPins:
-#     GPIO.setup(rgbPins[i], GPIO.OUT)
-#     GPIO.setup(rgbPins[i], GPIO.HIGH)
+# set buzzer pin
+buzzer = Buzzer(25)
 
-# pinRed = GPIO.PWIM(rgbPins['pinRed'], 2000)
-# pinGreen = GPIO.PWIM(rgbPins['pinGreen'], 2000)
-# pinBlue = GPIO.PWIM(rgbPins['pinBlue'], 2000)
+# set servo pin
+# servo = Servo(18, min_pulse_width=0.5/1000, max_pulse_width=2.5/1000,pin_factory=factory)
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
-#LED RGB
-# red = 16
-# green = 24
-# blue = 12
-
-# GPIO.setup(red, GPIO.OUT)
-# GPIO.setup(green, GPIO.OUT)
-# GPIO.setup(blue, GPIO.OUT)
-
-# GPIO.output(red, 0)
-# GPIO.output(green, 0)
-# GPIO.output(blue, 0)
-
-#Buzzer
-buzzer = Buzzer(25)
-
-#Codepad
+# numberpad setup
 GPIO.setup(L1, GPIO.OUT)
 GPIO.setup(L2, GPIO.OUT)
 GPIO.setup(L3, GPIO.OUT)
@@ -99,9 +77,7 @@ GPIO.setup(C2, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(C3, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(C4, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
-#SERVO
-# servo = Servo(18, min_pulse_width=0.5/1000, max_pulse_width=2.5/1000,pin_factory=factory)
-
+# rgb setup
 red = 16
 green = 24
 blue = 12
@@ -135,26 +111,6 @@ def buzz():
     buzzer.off()
     time.sleep(1)
 
-# def setPinYellow():
-#     GPIO.output(red, GPIO.LOW)
-#     GPIO.output(green, GPIO.LOW)
-#     GPIO.output(blue, GPIO.HIGH)
-# def setPinRed():
-#     GPIO.output(red, GPIO.LOW)
-#     GPIO.output(green, GPIO.HIGH)
-#     GPIO.output(blue, GPIO.HIGH)
-# def setPinGreen():
-#     GPIO.output(red, GPIO.HIGH)
-#     GPIO.output(green, GPIO.LOW)
-#     GPIO.output(blue, GPIO.HIGH)
-# def setPinBlue():
-#     GPIO.output(red, GPIO.HIGH)
-#     GPIO.output(green, GPIO.HIGH)
-#     GPIO.output(blue, GPIO.LOW)
-# def setPinNeutral():
-#     GPIO.output(red, GPIO.LOW)
-#     GPIO.output(green, GPIO.LOW)
-#     GPIO.output(blue, GPIO.LOW)
 
 def readLine(line, characters):
     GPIO.output(line, GPIO.HIGH)
