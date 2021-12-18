@@ -16,6 +16,7 @@ from luma.core.interface.serial import i2c
 from luma.oled.device import sh1106
 import db as db
 import random
+from gpiozero import Buzzer
 
 #OLED
 serial = i2c(port=1, address=0x3C)
@@ -68,17 +69,24 @@ C4 = 27
 # pinGreen = GPIO.PWIM(rgbPins['pinGreen'], 2000)
 # pinBlue = GPIO.PWIM(rgbPins['pinBlue'], 2000)
 
-GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BCM)
-
-# red = 13
-# green = 19
-# blue = 26
+GPIO.setwarnings(False)
 
 #LED RGB
-#GPIO.setup(red, GPIO.OUT) #RED
-#GPIO.setup(green, GPIO.OUT) #GREEN
-#GPIO.setup(blue, GPIO.OUT) #BLUE
+# red = 16
+# green = 24
+# blue = 12
+
+# GPIO.setup(red, GPIO.OUT)
+# GPIO.setup(green, GPIO.OUT)
+# GPIO.setup(blue, GPIO.OUT)
+
+# GPIO.output(red, 0)
+# GPIO.output(green, 0)
+# GPIO.output(blue, 0)
+
+#Buzzer
+buzzer = Buzzer(25)
 
 #Codepad
 GPIO.setup(L1, GPIO.OUT)
@@ -107,6 +115,17 @@ def openWindow():
 def closeWindow():
     # servo.value = 1
     print("window open")
+
+def flashingLed(colorPin):
+    for _ in range(5):
+        GPIO.output(colorPin, 1)
+        time.sleep(0.2)
+    
+def buzz():
+    buzzer.on()
+    time.sleep(1)
+    buzzer.off()
+    time.sleep(1)
 
 # def setPinYellow():
 #     GPIO.output(red, GPIO.LOW)
