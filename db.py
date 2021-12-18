@@ -3,7 +3,7 @@ from sqlite3 import Error as SQLiteError
 
 def getLastReadings(conn, num):
     cur = conn.cursor()
-    cur.execute("SELECT * FROM data_readings ORDER BY datetime(measured_at) ASC LIMIT " + num)
+    cur.execute("SELECT * FROM data_readings ORDER BY datetime(measured_at) ASC LIMIT " + str(num))
 
     rows = cur.fetchall()
 

@@ -11,7 +11,7 @@ def measure_data():
 
 def shouldWindowOpen(celcius, eco2, tvoc):
     rand = random.random()
-    return random < 0.5
+    return rand < 0.5
 
 def main():
     conn = db.create_connection(r"sensor_dataset.db")
