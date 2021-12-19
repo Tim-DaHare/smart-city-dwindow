@@ -9,6 +9,28 @@ def getLastReadings(conn, num):
 
     return rows
 
+def insertDataReading(conn, data):
+    sql = '''INSERT INTO data_readings (measured_at, temprature, eco2, tvoc)
+              VALUES(datetime('now'), ?, ?, ?)'''
+
+    cur = conn.cursor()
+    cur.execute(sql, data)
+    
+    conn.commit()
+
+    return cur.lastrowid
+
+def setUserConfig(conn, data):
+    cur = conn.cursor()
+
+    cur.execute("UPDATE TABLE user_config SET eco2_threshold = ?, temp_threshold = ?", data)
+
+def getUserConfig(conn):
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM user_config")
+
+    return cur.fetch()
+
 def create_connection(db_file):
     conn = None
     try:
@@ -24,14 +46,3 @@ def create_table(conn, create_table_sql):
         c.execute(create_table_sql)
     except SQLiteError as e:
         print(e)
-
-def insertDataReading(conn, data):
-    sql = '''INSERT INTO data_readings (measured_at, temprature, eco2, tvoc)
-              VALUES(datetime('now'), ?, ?, ?)'''
-
-    cur = conn.cursor()
-    cur.execute(sql, data)
-    
-    conn.commit()
-
-    return cur.lastrowid
