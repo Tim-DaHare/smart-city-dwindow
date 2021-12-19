@@ -1,22 +1,24 @@
 # pip3 install requests
 import requests
+from requests.api import get
 # pip3 install geocoder
-import geocoder
+# import geocoder
 
 import GeocodeModule as gcm
 
 from datetime import datetime
+import time
 
 # Get current location
-LOCATION = geocoder.ip('me')
+# LOCATION = geocoder.ip('me')
 # API Key
 APP_ID = '12aa733d76825d884a0caf790e3bb128'
+LOC_QUERY = 'Hospitaaldreef'
 # Get LAT and LON
-LAT = str(gcm.get_lat_lon('1315RC').get('lat'))
-LON = str(gcm.get_lat_lon('1315RC').get('lon'))
-POSTAL = '1315RC'
+LAT = str(gcm.get_lat_lon(LOC_QUERY).get('lat'))
+LON = str(gcm.get_lat_lon(LOC_QUERY).get('lon'))
 # URL to the weather API
-DATA_URL = f'https://api.openweathermap.org/data/2.5/onecall?lat={LON}&lon={LAT}&units=metric&exclude=minutely,daily&appid={APP_ID}'
+DATA_URL = f'https://api.openweathermap.org/data/2.5/onecall?lat={LAT}&lon={LON}&units=metric&exclude=minutely,daily&appid={APP_ID}'
 # Weather data parsed to json
 GLOBAL_PARSED_DATA = requests.get(DATA_URL).json()
 
@@ -24,11 +26,11 @@ GLOBAL_PARSED_DATA = requests.get(DATA_URL).json()
 # Returns your current location with latitude and longitude
 def get_location():
     try:
-        lat = str(gcm.get_lat_lon(POSTAL).get('lat'))
+        lat = str(gcm.get_lat_lon(LOC_QUERY).get('lat'))
         # Get longitude
-        lon = str(gcm.get_lat_lon(POSTAL).get('lon'))
+        lon = str(gcm.get_lat_lon(LOC_QUERY).get('lon'))
         return {
-            'location': str(gcm.get_lat_lon('1315RC').get('address')),
+            'location': str(gcm.get_lat_lon(LOC_QUERY).get('address')),
             'lat': lat,
             'lon': lon
         }
@@ -84,7 +86,19 @@ def get_upcoming_temp():
             'code': 1337
         }
 
+def open_close_window_prediction():
+    ts = time.time()
+    utc_ts = datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
-# print(gcm.get_lat_lon(POSTAL))
-print(LOCATION.lat, LOCATION.lng)
-print(gcm.get_lat_lon(POSTAL))
+    for x in range(len(get_upcoming_temp())):
+        if get_upcoming_temp()[x]['dt'] < utc_ts or x > 2 or x == 1: 
+            continue
+        # If probability of precipitation >= x set windowOpen to FALSE
+        if get_upcoming_temp()[x]['pop'] >= 0:
+            # return windowOpen = false
+            pass
+        # If probability of precipitation <= x and sensor_data > x set windowOpen to TRUE
+        if get_upcoming_temp()[x]['pop'] <= 0 and sensor_data > 0:
+            # return windowOpen = true
+            pass
+
