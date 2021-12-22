@@ -1,6 +1,3 @@
-# SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
-# SPDX-License-Identifier: MIT
-
 import time
 import board
 import adafruit_bme680
@@ -25,7 +22,7 @@ serial = i2c(port=1, address=0x3C)
 
 i2c = busio.I2C(board.SCL, board.SDA)
 
-# Create sensor object, communicating over the board's default I2C bus
+# BME680
 # bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c, debug=False)
 
 # factory = PiGPIOFactory()
@@ -93,12 +90,27 @@ GPIO.output(blue, GPIO.LOW)
 keyPadNumber = "1"
 workingKeypadNumbers = ["1", "2", "3", "4"]
 
+window_is_open = False
+open_close_wait_time = 3
+last_open_close_time = time.time()
+
 def openWindow():
+    global window_is_open
+    global last_open_close_time
+
+    window_is_open = True
+    last_open_close_time = time.time()
     # servo.value = 0
     print("window open")
+
 def closeWindow():
-    # servo.value = 1
+    global window_is_open
+    global last_open_close_time
+
+    window_is_open = False
+    last_open_close_time = time.time()
     print("window open")
+    # servo.value = 1
 
 def flashingLed(colorPin):
     for _ in range(5):
@@ -109,8 +121,6 @@ def buzz():
     buzzer.on()
     time.sleep(1)
     buzzer.off()
-    time.sleep(1)
-
 
 def readLine(line, characters):
     GPIO.output(line, GPIO.HIGH)
@@ -125,16 +135,26 @@ def readLine(line, characters):
         keyPadNumber = characters[3]
     GPIO.output(line, GPIO.LOW)
 
-def showLED(color):
-    if color == 'green':
-        print()
+# def measure_data():
+#     return 26.1, 30, 22
 
-def measure_data():
-    return 26.1, 30, 22
+def should_window_open(conn, celcius, eco2):
+    user_config = db.getUserConfig(conn)
 
-def shouldWindowOpen(celcius, eco2, tvoc):
-    rand = random.random()
-    return rand < 0.5
+    temp_thres = user_config[1]
+    eco2_thres = user_config[0]
+
+    shouldWindowOpen = False
+
+    # TODO: Add weather api raining chance
+    if (eco2 > eco2_thres):
+        shouldWindowOpen = True
+    elif(celcius > temp_thres):
+        shouldWindowOpen = True
+
+    # TODO: Prediction HERE
+
+    return shouldWindowOpen
     
 def main(delay = 0.5):
     conn = db.create_connection(r"sensor_dataset.db")
@@ -147,71 +167,45 @@ def main(delay = 0.5):
         create_dr_q = """CREATE TABLE IF NOT EXISTS data_readings (id integer PRIMARY KEY, measured_at text, temprature real, eco2 integer, tvoc integer, window_open tinyint, is_raining tinyint); """
         db.create_table(conn, create_dr_q)
 
-        create_vth_q = """CREATE TABLE IF NOT EXISTS user_config (id integer PRIMARY KEY, eco2_threshold, integer, temp_threshold real); """
+        create_vth_q = """CREATE TABLE IF NOT EXISTS user_config (eco2_threshold integer, temp_threshold real); """
+        db.create_table(conn, create_vth_q)
 
-    with canvas(device) as draw:
-        draw.text((0, 0), 'DWindow is klaar voor gebruik!', fill='white')
-        draw.text((0, 15), 'U kunt de grenswaarden instellen in het dashboard.', fill='white')
+        if (db.getUserConfig(conn) == None):
+            conn.cursor().execute('''INSERT INTO user_config (eco2_threshold, temp_threshold) VALUES(20, 18)''')
+
+    # with canvas(device) as draw:
+    #     draw.text((0, 0), 'DWindow is klaar voor gebruik!', fill='white')
+    #     draw.text((0, 15), 'U kunt de grenswaarden instellen in het dashboard.', fill='white')
 
     time.sleep(8)
 
     while True:
-        # TODO: collect configured values
-        user_config = db.getUserConfig(conn)
-        # TODO: check if we need more values
-        temp_thres = 25
-        eco2_thres = 410
-
         # Collect sensor values
-        temp = 20
-        eco2 = 400
+        eco2 = 20
+        celcius = 18
 
-        # temperature = ('temperature: {:.2f}'.format(bme680.temperature))
-        # humidity = ('Humidity: {:.2f}%'.format(bme680.humidity))
-        # eCO2 = ('2CO2: {:.2f}ppm' .format(sgp30.eCO2))
-        # TVOC = ('TVOC: {:.2f}ppb' .format(sgp30.TVOC))
+        # celcius = bme680.temperature
+        # eco2_thres = sgp30.eCO2
 
-        with canvas(device) as draw:
-            draw.text((0, 0), "Tempratuur: ".format(temp), fill='white')
-            draw.text((0, 0), "eCO2: ".format(eco2), fill='white')
+        # with canvas(device) as draw:
+        #     draw.text((0, 0), "Tempratuur in celcius:".format(celcius), fill='white')
+        #     draw.text((0, 0), "eCO2: ".format(eco2), fill='white')
+    
+        shouldWindowOpen = should_window_open(conn, celcius, eco2)
 
-        shouldWindowOpen = False
+        if (time.time() > last_open_close_time + open_close_wait_time):
+            # Buzz and open/close window
+            if (window_is_open != shouldWindowOpen):
+                buzz()
 
-        # Add weather api raining chance
-        if (eco2 > eco2_thres):
-            shouldWindowOpen = True
-        elif(temp > temp_thres):
-            shouldWindowOpen = True
+            if (shouldWindowOpen):
+                openWindow()
+            else: 
+                closeWindow()
 
-        if (shouldWindowOpen):
-            openWindow()
-        else: 
-            closeWindow()
+            # TODO: Add db record
 
         time.sleep(delay)
-
-    # while True:
-    #     with canvas(device) as draw:
-    #         eCO2, TVOC = sgp30.iaq_measure()
-    #         # print("eCO2 = %d ppm \t TVOC = %d ppb" % (eCO2, TVOC))
-
-    #         eCO2 = ('2CO2: {:.2f}ppm' .format(sgp30.eCO2))
-    #         TVOC = ('TVOC: {:.2f}ppb' .format(sgp30.TVOC))
-
-    #         # draw.text((0, 0), temperature, fill='white')
-    #         # draw.text((0, 15), humidity, fill='white')
-    #         draw.text((0, 30), eCO2, fill='white')
-    #         draw.text((0, 45), TVOC, fill='white')
-
-    #     time.sleep(1)
-
-        # closeWindow()
-        # time.sleep(1)
-        # openWindow()
-        # time.sleep(1)
-    
-    # openWindow()
-    # closeWindow()
 
     return
     while True:

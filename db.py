@@ -29,7 +29,7 @@ def getUserConfig(conn):
     cur = conn.cursor()
     cur.execute("SELECT * FROM user_config")
 
-    return cur.fetch()
+    return cur.fetchone()
 
 def create_connection(db_file):
     conn = None
