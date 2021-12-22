@@ -19,5 +19,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('data-readings/', views.dataReadings, name="data_readings")
+    path('data-readings/', views.dataReadings, name="data_readings"),
+    path('get_config/', views.getConfig, name="get_config"),
+    path('set_config/', views.setConfig, name="set_config")
 ]

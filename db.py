@@ -23,7 +23,9 @@ def insertDataReading(conn, data):
 def setUserConfig(conn, data):
     cur = conn.cursor()
 
-    cur.execute("UPDATE TABLE user_config SET eco2_threshold = ?, temp_threshold = ?", data)
+    cur.execute("UPDATE user_config SET eco2_threshold = ?, temp_threshold = ?", data)
+    conn.commit()
+
 
 def getUserConfig(conn):
     cur = conn.cursor()
