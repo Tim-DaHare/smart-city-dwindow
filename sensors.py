@@ -14,6 +14,8 @@ from luma.oled.device import sh1106
 import db as db
 import random
 from gpiozero import Buzzer
+import OpenWeatherModule as weather
+
 
 # oled setup
 serial = i2c(port=1, address=0x3C)
@@ -92,6 +94,7 @@ workingKeypadNumbers = ["1", "2", "3", "4"]
 
 window_is_open = False
 open_close_wait_time = 3
+# open_close_wait_time = 60
 last_open_close_time = time.time()
 
 def openWindow():
@@ -135,10 +138,7 @@ def readLine(line, characters):
         keyPadNumber = characters[3]
     GPIO.output(line, GPIO.LOW)
 
-# def measure_data():
-#     return 26.1, 30, 22
-
-def should_window_open(conn, celcius, eco2):
+def should_window_open(conn, celcius, eco2, pop):
     user_config = db.getUserConfig(conn)
 
     temp_thres = user_config[1]
@@ -146,13 +146,12 @@ def should_window_open(conn, celcius, eco2):
 
     shouldWindowOpen = False
 
-    # TODO: Add weather api raining chance
     if (eco2 > eco2_thres):
         shouldWindowOpen = True
     elif(celcius > temp_thres):
         shouldWindowOpen = True
-
-    # TODO: Prediction HERE
+    elif(pop > 80):
+        shouldWindowOpen = False
 
     return shouldWindowOpen
     
@@ -164,7 +163,7 @@ def main(delay = 0.5):
         raise Exception("connection could not be created")
 
     with conn:
-        create_dr_q = """CREATE TABLE IF NOT EXISTS data_readings (id integer PRIMARY KEY, measured_at text, temprature real, eco2 integer, tvoc integer, window_open tinyint, is_raining tinyint); """
+        create_dr_q = """CREATE TABLE IF NOT EXISTS data_readings (id integer PRIMARY KEY, measured_at text, temprature real, eco2 integer, tvoc integer, precipitation_chance integer, window_open tinyint);"""
         db.create_table(conn, create_dr_q)
 
         create_vth_q = """CREATE TABLE IF NOT EXISTS user_config (eco2_threshold integer, temp_threshold real); """
@@ -183,17 +182,20 @@ def main(delay = 0.5):
         # Collect sensor values
         eco2 = 20
         celcius = 18
+        tvoc = 100
 
         # celcius = bme680.temperature
         # eco2_thres = sgp30.eCO2
+        # tvoc = sgp30.TVOC
 
         # with canvas(device) as draw:
         #     draw.text((0, 0), "Tempratuur in celcius:".format(celcius), fill='white')
         #     draw.text((0, 0), "eCO2: ".format(eco2), fill='white')
-    
-        shouldWindowOpen = should_window_open(conn, celcius, eco2)
 
         if (time.time() > last_open_close_time + open_close_wait_time):
+            pop = weather.get_weather_prediction()
+            shouldWindowOpen = should_window_open(conn, celcius, eco2, pop)
+
             # Buzz and open/close window
             if (window_is_open != shouldWindowOpen):
                 buzz()
@@ -204,10 +206,10 @@ def main(delay = 0.5):
                 closeWindow()
 
             # TODO: Add db record
+            db.insertDataReading(conn, (celcius, eco2, tvoc, pop, int(shouldWindowOpen)))
 
         time.sleep(delay)
 
-    return
     while True:
         try:
             now = datetime.now()
