@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5c57b18db6dc988a2723ec1463adde9c00c06b3c3e65a5b4504bd1f4cb0c08e1"
+            "sha256": "1a6881cb7657c8fed3d48dd3fb6aed1d275058a59e0eb288e4a7c65a4c4bf93f"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -18,9 +18,9 @@
     "default": {
         "adafruit-blinka": {
             "hashes": [
-                "sha256:54d1db8679e50f7b6ff6ac9580ecabfed2dd657eeb6edd3e62bf2a4fdb59b237"
+                "sha256:6bda326c154b93b02b6517c33f54cf7f5b10793106e91fd814e3c95a29589bf8"
             ],
-            "version": "==6.16.0"
+            "version": "==6.17.0"
         },
         "adafruit-circuitpython-bme680": {
             "hashes": [
@@ -114,6 +114,21 @@
             ],
             "version": "==5.4.2"
         },
+        "certifi": {
+            "hashes": [
+                "sha256:78884e7c1d4b00ce3cea67b44566851c4343c120abd683433ce934a68ea58872",
+                "sha256:d62a0163eb4c2344ac042ab2bdf75399a71a2d8c7d47eac2e2ee91b9d6339569"
+            ],
+            "version": "==2021.10.8"
+        },
+        "charset-normalizer": {
+            "hashes": [
+                "sha256:1eecaa09422db5be9e29d7fc65664e6c33bd06f9ced7838578ba40d58bdf3721",
+                "sha256:b0b883e8e874edfdece9c28f314e3dd5badf067342e42fb162203335ae61aa2c"
+            ],
+            "markers": "python_version >= '3'",
+            "version": "==2.0.9"
+        },
         "colorzero": {
             "hashes": [
                 "sha256:0e60d743a6b8071498a56465f7719c96a5e92928f858bab1be2a0d606c9aa0f8",
@@ -151,6 +166,14 @@
             ],
             "index": "pypi",
             "version": "==1.6.2"
+        },
+        "idna": {
+            "hashes": [
+                "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff",
+                "sha256:9d643ff0a55b762d5cdb124b8eaa99c66322e2157b69160bc32796e824360e6d"
+            ],
+            "markers": "python_version >= '3'",
+            "version": "==3.3"
         },
         "luma.core": {
             "hashes": [
@@ -219,6 +242,7 @@
                 "sha256:e3dacecfbeec9a33e932f00c6cd7996e62f53ad46fbe677577394aaa90ee419a",
                 "sha256:eb9fc393f3c61f9054e1ed26e6fe912c7321af2f41ff49d3f83d05bacf22cc78"
             ],
+            "index": "pypi",
             "version": "==8.4.0"
         },
         "pyftdi": {
@@ -241,6 +265,14 @@
                 "sha256:a4cc7404a203144754164b8b40994e2849fde1cfff06b08492f12fff9d9de7b9"
             ],
             "version": "==1.2.1"
+        },
+        "requests": {
+            "hashes": [
+                "sha256:6c1246513ecd5ecd4528a0906f910e8f0f9c6b8ec72030dc9fd154dc1a6efd24",
+                "sha256:b8aa58f8cf793ffd8782d3d8cb19e66ef36f7aba4353eec859e74678b01b07a7"
+            ],
+            "index": "pypi",
+            "version": "==2.26.0"
         },
         "rpi-ws281x": {
             "hashes": [
@@ -267,6 +299,7 @@
             "hashes": [
                 "sha256:8a7f5c289f161ea2ac4697fa8a10918232c990678dd0053084b3c43b1363910d"
             ],
+            "markers": "platform_system == 'Linux'",
             "version": "==3.5"
         },
         "sqlparse": {
@@ -293,6 +326,13 @@
             ],
             "markers": "python_version < '3.8'",
             "version": "==4.0.1"
+        },
+        "urllib3": {
+            "hashes": [
+                "sha256:4987c65554f7a2dbf30c18fd48778ef124af6fab771a377103da0585e2336ece",
+                "sha256:c4fdf4019605b6e5423637e01bc9fe4daef873709a7973e195ceba0a62bbc844"
+            ],
+            "version": "==1.26.7"
         },
         "wrapt": {
             "hashes": [

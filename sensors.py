@@ -5,11 +5,11 @@ import RPi.GPIO as GPIO
 from gpiozero import Servo
 from gpiozero.pins.pigpio import PiGPIOFactory
 from datetime import datetime
-# from PIL import ImageFont
+from PIL import ImageFont
 import busio
 import adafruit_sgp30
 from luma.core.interface.serial import i2c
-# from luma.core.render import canvas
+from luma.core.render import canvas
 from luma.oled.device import sh1106
 import db as db
 import random
@@ -20,14 +20,12 @@ import OpenWeatherModule as weather
 # oled setup
 serial = i2c(port=1, address=0x3C)
 device = sh1106(serial)
-device.rotate = 0 #ligt aan je display, kan 0, 1, 2, 3 zijn
+device.rotate = 0 
 
 i2c = busio.I2C(board.SCL, board.SDA)
 
 # BME680
 bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c, debug=False)
-
-factory = PiGPIOFactory()
 
 #SGP30
 i2cSGP = busio.I2C(board.SCL, board.SDA, frequency=100000)
@@ -37,13 +35,6 @@ sgp30 = adafruit_sgp30.Adafruit_SGP30(i2cSGP)
 # sgp30.iaq_init()
 # sgp30.set_iaq_baseline(0x8973, 0x8AAE)
 # sgp30.set_iaq_baseline(0x8f87, 0x8f55)
-
-# Offset for temprature measurements in c
-temperature_offset = -5
-
-devices = i2c.scan()
-
-oled_addr = 0x3c
 
 # set numberpad pins
 L1 = 26
@@ -60,6 +51,7 @@ C4 = 27
 buzzer = Buzzer(25)
 
 # set servo pin
+factory = PiGPIOFactory()
 servo = Servo(18, min_pulse_width=0.5/1000, max_pulse_width=2.5/1000,pin_factory=factory)
 
 GPIO.setmode(GPIO.BCM)
@@ -76,6 +68,7 @@ GPIO.setup(C2, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(C3, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(C4, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
+
 # rgb setup
 red = 16
 green = 24
@@ -90,7 +83,6 @@ GPIO.output(green, GPIO.LOW)
 GPIO.output(blue, GPIO.LOW)
 
 keyPadNumber = "1"
-workingKeypadNumbers = ["1", "2", "3", "4"]
 
 servo.value = 1
 
@@ -105,8 +97,8 @@ def openWindow():
 
     window_is_open = True
     last_open_close_time = time.time()
-    servo.value = 0
     print("window open")
+    servo.value = 0
 
 def closeWindow():
     global window_is_open
@@ -118,8 +110,10 @@ def closeWindow():
     servo.value = 1
 
 def flashingLed(colorPin):
-    for _ in range(5):
+    for _ in range(3):
         GPIO.output(colorPin, 1)
+        time.sleep(0.2)
+        GPIO.output(colorPin, 0)
         time.sleep(0.2)
     
 def buzz():
@@ -141,13 +135,10 @@ def readLine(line, characters):
     GPIO.output(line, GPIO.LOW)
 
 def should_window_open(conn, celcius, eco2, pop):
-    print(eco2)
-    print(celcius)
-    print(pop)
     user_config = db.getUserConfig(conn)
 
-    temp_thres = user_config[1]
-    eco2_thres = user_config[0]
+    temp_thres = user_config[0]
+    eco2_thres = user_config[1]
 
     shouldWindowOpen = False
 
@@ -158,7 +149,18 @@ def should_window_open(conn, celcius, eco2, pop):
     if(pop > 80):
         shouldWindowOpen = False
 
+    print(shouldWindowOpen)
     return shouldWindowOpen
+
+small_font = ImageFont.truetype('FreeSans.ttf', 12)
+large_font = ImageFont.truetype('FreeSans.ttf', 32)
+
+def showMessage(temperature, humidity, eCO2, TVOC):
+    with canvas(device) as draw:
+        draw.text((1, 0), temperature, fill='white')
+        draw.text((1, 15), humidity, fill='white')
+        draw.text((1, 30), eCO2, fill='white')
+        draw.text((1, 45), TVOC, fill='white')
     
 def main(delay = 0.5):
     conn = db.create_connection(r"sensor_dataset.db")
@@ -198,73 +200,61 @@ def main(delay = 0.5):
         #     draw.text((0, 0), "eCO2: ".format(eco2), fill='white')
 
         if (time.time() > last_open_close_time + open_close_wait_time):
-            pop = weather.get_weather_prediction()
+            # pop = weather.get_weather_prediction()
+            pop = 75
             shouldWindowOpen = should_window_open(conn, celcius, eco2, pop)
 
             # Buzz and open/close window
             if (window_is_open != shouldWindowOpen):
                 buzz()
+                if (shouldWindowOpen):
+                    flashingLed(green)
+                    openWindow()
+                else: 
+                    flashingLed(red)
+                    closeWindow()
 
-            if (shouldWindowOpen):
-                openWindow()
-            else: 
-                closeWindow()
+
+            # if (shouldWindowOpen):
+            #     openWindow()
+            # else: 
+            #     closeWindow()
 
             # TODO: Add db record
             db.insertDataReading(conn, (celcius, eco2, tvoc, pop, int(shouldWindowOpen)))
-
-        time.sleep(delay)
-
-    while True:
+            
+            
         try:
             now = datetime.now()
-            # print("\nTemperature: %0.1f C" % (bme680.temperature + temperature_offset))
-            # print("Gas: %d ohm" % bme680.gas)
-            # print("Humidity: %0.1f %%" % bme680.relative_humidity)
-            # print("Pressure: %0.3f hPa" % bme680.pressure)
-            # print("Altitude = %0.2f meters" % bme680.altitude)
-
             if keyPadNumber == "1":
-                dateMessage = '{:%d %B %Y}'.format(now)
-                timeMessage = '{:%H :%M :%S}'.format(now)
-                # setPinNeutral()
-                # showMessage(timeMessage, dateMessage, 'Dwindow', 18)
+                currentTime = '{:%H:%M:%S}'.format(now)
+                currentDate = '{:%d %B %Y}'.format(now)
+                with canvas(device) as draw:
+                    draw.text((0, 0), currentTime, font=large_font, fill='white')
+                    draw.text((0, 50), currentDate, font=small_font, fill='white')
             if keyPadNumber == "2":
-                title = "Temperatuur"
-                temperature = "%0.1f C" % (bme680.temperature + temperature_offset)
-                timeMessage = '{:%H :%M :%S}'.format(now)
-
-                if bme680.temperature + temperature_offset:
-                    realTemp = bme680.temperature + temperature_offset
-                    print("realtemp " + str(realTemp))
-                    if realTemp < 20:
-                        # setPinGreen()
-                        closeWindow()
-                    if realTemp >= 20 and realTemp < 22:
-                        # setPinYellow()
-                        print('setPinYellow')
-                    if realTemp >= 22:
-                        # setPinRed()
-                        openWindow()
-                # showMessage(title, temperature, timeMessage)
+                temperature = ('temperatuur: {:.2f}'.format(bme680.temperature))
+                humidity = ('Vochtigheid: {:.2f}%'.format(bme680.humidity))
+                eCO2 = ('CO2: {:.2f}ppm' .format(sgp30.eCO2))
+                TVOC = ('TVOC: {:.2f}ppb' .format(sgp30.TVOC))
+                showMessage(temperature, humidity, eCO2, TVOC)
             if keyPadNumber == "3":
-                title = "Luchtdruk"
-                pressure = "%0.3f hPa" % bme680.pressure
-                timeMessage = '{:%H :%M :%S}'.format(now)
-                # showMessage(title, pressure, timeMessage)
+                verwachting = ('De neerslagkans: {} %'.format(pop))
+                with canvas(device) as draw:
+                    draw.text((0, 0), verwachting, fill='white')
             if keyPadNumber == "4":
-                title = "Luchtvochtigheid"
-                pressure = " %0.1f %%" % bme680.relative_humidity
-                timeMessage = '{:%H :%M :%S}'.format(now)
-                # showMessage(title, pressure, timeMessage)
+                print('4')
 
             readLine(L1, ["1","2","3","A"])
             readLine(L2, ["4","5","6","B"])
             readLine(L3, ["7","8","9","C"])
             readLine(L4, ["*","0","#","D"])
-    
-            time.sleep(delay)
+
+            time.sleep(0.4)
         except KeyboardInterrupt:
             print("\nApplication stopped!")
+
+        time.sleep(delay)
+
 
 main()
