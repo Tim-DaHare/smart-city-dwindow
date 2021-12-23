@@ -185,7 +185,7 @@ def main(delay = 0.5):
         tvoc = 100
 
         # celcius = bme680.temperature
-        # eco2_thres = sgp30.eCO2
+        # eco2 = sgp30.eCO2
         # tvoc = sgp30.TVOC
 
         # with canvas(device) as draw:

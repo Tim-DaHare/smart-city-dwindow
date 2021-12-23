@@ -12,6 +12,7 @@ adafruit-circuitpython-sgp30 = "*"
 gpiozero = "*"
 adafruit-ssd1306 = "*"
 pigpio = "*"
+pillow = "*"
 
 [dev-packages]
 
