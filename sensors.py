@@ -200,8 +200,7 @@ def main(delay = 0.5):
         #     draw.text((0, 0), "eCO2: ".format(eco2), fill='white')
 
         if (time.time() > last_open_close_time + open_close_wait_time):
-            # pop = weather.get_weather_prediction()
-            pop = 75
+            pop = weather.get_weather_prediction()
             shouldWindowOpen = should_window_open(conn, celcius, eco2, pop)
 
             # Buzz and open/close window
@@ -242,8 +241,6 @@ def main(delay = 0.5):
                 verwachting = ('De neerslagkans: {} %'.format(pop))
                 with canvas(device) as draw:
                     draw.text((0, 0), verwachting, fill='white')
-            if keyPadNumber == "4":
-                print('4')
 
             readLine(L1, ["1","2","3","A"])
             readLine(L2, ["4","5","6","B"])

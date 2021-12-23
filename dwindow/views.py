@@ -33,8 +33,8 @@ def getConfig(request):
     conn.close()
 
     return JsonResponse({
-        "temprature_threshold": config[1],
-        "eco2_threshold": config[0],
+        "temprature_threshold": config[0],
+        "eco2_threshold": config[1],
     })
 
 @csrf_exempt
