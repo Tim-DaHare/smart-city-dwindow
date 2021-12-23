@@ -10,8 +10,9 @@ def getLastReadings(conn, num):
     return rows
 
 def insertDataReading(conn, data):
-    sql = '''INSERT INTO data_readings (measured_at, temprature, eco2, tvoc)
-              VALUES(datetime('now'), ?, ?, ?)'''
+    # temprature real, eco2 integer, tvoc integer, precipitation_chance integer, window_open tinyint
+    sql = '''INSERT INTO data_readings (measured_at, temprature, eco2, tvoc, precipitation_chance, window_open)
+              VALUES(datetime('now'), ?, ?, ?, ?, ?)'''
 
     cur = conn.cursor()
     cur.execute(sql, data)
@@ -23,7 +24,9 @@ def insertDataReading(conn, data):
 def setUserConfig(conn, data):
     cur = conn.cursor()
 
-    cur.execute("UPDATE TABLE user_config SET eco2_threshold = ?, temp_threshold = ?", data)
+    cur.execute("UPDATE user_config SET eco2_threshold = ?, temp_threshold = ?", data)
+    conn.commit()
+
 
 def getUserConfig(conn):
     cur = conn.cursor()

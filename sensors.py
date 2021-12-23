@@ -14,22 +14,24 @@ from luma.oled.device import sh1106
 import db as db
 import random
 from gpiozero import Buzzer
+import OpenWeatherModule as weather
+
 
 # oled setup
 serial = i2c(port=1, address=0x3C)
-# device = sh1106(serial)
-# device.rotate = 0 #ligt aan je display, kan 0, 1, 2, 3 zijn
+device = sh1106(serial)
+device.rotate = 0 #ligt aan je display, kan 0, 1, 2, 3 zijn
 
 i2c = busio.I2C(board.SCL, board.SDA)
 
 # BME680
-# bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c, debug=False)
+bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c, debug=False)
 
-# factory = PiGPIOFactory()
+factory = PiGPIOFactory()
 
 #SGP30
 i2cSGP = busio.I2C(board.SCL, board.SDA, frequency=100000)
-# sgp30 = adafruit_sgp30.Adafruit_SGP30(i2cSGP)
+sgp30 = adafruit_sgp30.Adafruit_SGP30(i2cSGP)
 
 #Baseline values: eCO2 = 0x8f87, TVOC = 0x8f55
 # sgp30.iaq_init()
@@ -58,7 +60,7 @@ C4 = 27
 buzzer = Buzzer(25)
 
 # set servo pin
-# servo = Servo(18, min_pulse_width=0.5/1000, max_pulse_width=2.5/1000,pin_factory=factory)
+servo = Servo(18, min_pulse_width=0.5/1000, max_pulse_width=2.5/1000,pin_factory=factory)
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
@@ -90,8 +92,11 @@ GPIO.output(blue, GPIO.LOW)
 keyPadNumber = "1"
 workingKeypadNumbers = ["1", "2", "3", "4"]
 
+servo.value = 1
+
 window_is_open = False
 open_close_wait_time = 3
+# open_close_wait_time = 60
 last_open_close_time = time.time()
 
 def openWindow():
@@ -100,7 +105,7 @@ def openWindow():
 
     window_is_open = True
     last_open_close_time = time.time()
-    # servo.value = 0
+    servo.value = 0
     print("window open")
 
 def closeWindow():
@@ -109,8 +114,8 @@ def closeWindow():
 
     window_is_open = False
     last_open_close_time = time.time()
-    print("window open")
-    # servo.value = 1
+    print("window close")
+    servo.value = 1
 
 def flashingLed(colorPin):
     for _ in range(5):
@@ -135,10 +140,10 @@ def readLine(line, characters):
         keyPadNumber = characters[3]
     GPIO.output(line, GPIO.LOW)
 
-# def measure_data():
-#     return 26.1, 30, 22
-
-def should_window_open(conn, celcius, eco2):
+def should_window_open(conn, celcius, eco2, pop):
+    print(eco2)
+    print(celcius)
+    print(pop)
     user_config = db.getUserConfig(conn)
 
     temp_thres = user_config[1]
@@ -146,13 +151,12 @@ def should_window_open(conn, celcius, eco2):
 
     shouldWindowOpen = False
 
-    # TODO: Add weather api raining chance
     if (eco2 > eco2_thres):
         shouldWindowOpen = True
-    elif(celcius > temp_thres):
+    if(celcius > temp_thres):
         shouldWindowOpen = True
-
-    # TODO: Prediction HERE
+    if(pop > 80):
+        shouldWindowOpen = False
 
     return shouldWindowOpen
     
@@ -164,14 +168,14 @@ def main(delay = 0.5):
         raise Exception("connection could not be created")
 
     with conn:
-        create_dr_q = """CREATE TABLE IF NOT EXISTS data_readings (id integer PRIMARY KEY, measured_at text, temprature real, eco2 integer, tvoc integer, window_open tinyint, is_raining tinyint); """
+        create_dr_q = """CREATE TABLE IF NOT EXISTS data_readings (id integer PRIMARY KEY, measured_at text, temprature real, eco2 integer, tvoc integer, precipitation_chance integer, window_open tinyint);"""
         db.create_table(conn, create_dr_q)
 
         create_vth_q = """CREATE TABLE IF NOT EXISTS user_config (eco2_threshold integer, temp_threshold real); """
         db.create_table(conn, create_vth_q)
 
         if (db.getUserConfig(conn) == None):
-            conn.cursor().execute('''INSERT INTO user_config (eco2_threshold, temp_threshold) VALUES(20, 18)''')
+            conn.cursor().execute('''INSERT INTO user_config (eco2_threshold, temp_threshold) VALUES(600, 25 )''')
 
     # with canvas(device) as draw:
     #     draw.text((0, 0), 'DWindow is klaar voor gebruik!', fill='white')
@@ -181,19 +185,22 @@ def main(delay = 0.5):
 
     while True:
         # Collect sensor values
-        eco2 = 20
-        celcius = 18
-
-        # celcius = bme680.temperature
-        # eco2_thres = sgp30.eCO2
+        # eco2 = 20
+        # celcius = 18
+        # tvoc = 100
+        
+        eco2 = sgp30.eCO2
+        celcius = bme680.temperature
+        tvoc = sgp30.TVOC
 
         # with canvas(device) as draw:
         #     draw.text((0, 0), "Tempratuur in celcius:".format(celcius), fill='white')
         #     draw.text((0, 0), "eCO2: ".format(eco2), fill='white')
-    
-        shouldWindowOpen = should_window_open(conn, celcius, eco2)
 
         if (time.time() > last_open_close_time + open_close_wait_time):
+            pop = weather.get_weather_prediction()
+            shouldWindowOpen = should_window_open(conn, celcius, eco2, pop)
+
             # Buzz and open/close window
             if (window_is_open != shouldWindowOpen):
                 buzz()
@@ -204,10 +211,10 @@ def main(delay = 0.5):
                 closeWindow()
 
             # TODO: Add db record
+            db.insertDataReading(conn, (celcius, eco2, tvoc, pop, int(shouldWindowOpen)))
 
         time.sleep(delay)
 
-    return
     while True:
         try:
             now = datetime.now()
