@@ -12,7 +12,8 @@ import time
 # Get current location
 # LOCATION = geocoder.ip('me')
 # API Key
-APP_ID = '12aa733d76825d884a0caf790e3bb128'
+# APP_ID = '12aa733d76825d884a0caf790e3bb128' OLD KEY
+APP_ID = 'd7e4c920bf451acf69831342e79fe06f'
 LOC_QUERY = 'Hospitaaldreef'
 # Get LAT and LON
 LAT = str(gcm.get_lat_lon(LOC_QUERY).get('lat'))

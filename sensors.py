@@ -203,7 +203,7 @@ def main(delay = 0.5):
 
         if (time.time() > last_open_close_time + open_close_wait_time):
             pop = weather.get_weather_prediction()
-            #pop = 35
+            # pop = 35
             shouldWindowOpen = should_window_open(conn, celcius, eco2, pop)
 
             # Buzz and open/close window
