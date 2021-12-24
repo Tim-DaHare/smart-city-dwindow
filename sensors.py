@@ -153,6 +153,8 @@ def should_window_open(conn, celcius, eco2, pop):
     return shouldWindowOpen
 
 small_font = ImageFont.truetype('FreeSans.ttf', 12)
+font_14 = ImageFont.truetype('FreeSans.ttf', 14)
+medium_font = ImageFont.truetype('FreeSans.ttf', 20)
 large_font = ImageFont.truetype('FreeSans.ttf', 32)
 
 def showMessage(temperature, humidity, eCO2, TVOC):
@@ -201,6 +203,7 @@ def main(delay = 0.5):
 
         if (time.time() > last_open_close_time + open_close_wait_time):
             pop = weather.get_weather_prediction()
+            #pop = 35
             shouldWindowOpen = should_window_open(conn, celcius, eco2, pop)
 
             # Buzz and open/close window
@@ -238,10 +241,17 @@ def main(delay = 0.5):
                 TVOC = ('TVOC: {:.2f}ppb' .format(sgp30.TVOC))
                 showMessage(temperature, humidity, eCO2, TVOC)
             if keyPadNumber == "3":
-                verwachting = ('De neerslagkans: {} %'.format(pop))
+                title = 'Neerslagkans:'
+                verwachting = ('{} %'.format(pop))
                 with canvas(device) as draw:
-                    draw.text((0, 0), verwachting, fill='white')
-
+                    draw.text((0, 0), title, font=medium_font, fill='white')
+                    draw.text((40, 20), verwachting, font=large_font, fill='white')
+            if keyPadNumber == "4":
+                temperature = ('temperatuur: {:.2f}'.format(bme680.temperature))
+                eCO2 = ('CO2: {:.2f}ppm' .format(sgp30.eCO2))
+                with canvas(device) as draw:
+                    draw.text((0, 0), temperature, font=font_14, fill='white')
+                    draw.text((0, 15), eCO2, font=font_14, fill='white')
             readLine(L1, ["1","2","3","A"])
             readLine(L2, ["4","5","6","B"])
             readLine(L3, ["7","8","9","C"])
