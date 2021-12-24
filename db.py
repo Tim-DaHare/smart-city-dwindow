@@ -49,3 +49,33 @@ def create_table(conn, create_table_sql):
         c.execute(create_table_sql)
     except SQLiteError as e:
         print(e)
+        
+def getAverageValues(conn):
+    readings = getLastReadings(conn, 30)
+
+    if (len(readings) == 0):
+        return None
+
+    celsuisAverage = 0
+    celciusTotal = 0
+
+    for reading in readings:
+        celciusTotal = celciusTotal + reading[2]
+
+    eco2Total = 0
+    eco2Avg = 0
+
+    for reading in readings:
+        eco2Total = eco2Total + reading[3]
+        
+    tvocTotal = 0
+    tvocAvg = 0
+
+    for reading in readings:
+        tvocTotal = tvocTotal + reading[4]
+
+    eco2Avg = eco2Total / len(readings)
+    tvocAvg = tvocTotal / len(readings)
+    celsuisAverage = celciusTotal / len(readings)
+
+    return eco2Avg, tvocAvg, celsuisAverage

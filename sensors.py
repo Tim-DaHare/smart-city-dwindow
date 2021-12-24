@@ -87,16 +87,15 @@ keyPadNumber = "1"
 servo.value = 1
 
 window_is_open = False
-open_close_wait_time = 3
 # open_close_wait_time = 60
-last_open_close_time = time.time()
+open_close_wait_time = 3
+last_open_close_time = time.time() - open_close_wait_time
 
 def openWindow():
     global window_is_open
     global last_open_close_time
 
     window_is_open = True
-    last_open_close_time = time.time()
     print("window open")
     servo.value = 0
 
@@ -105,7 +104,6 @@ def closeWindow():
     global last_open_close_time
 
     window_is_open = False
-    last_open_close_time = time.time()
     print("window close")
     servo.value = 1
 
@@ -136,15 +134,21 @@ def readLine(line, characters):
 
 def should_window_open(conn, celcius, eco2, pop):
     user_config = db.getUserConfig(conn)
-
+    avarageValues = db.getAverageValues(conn)
+    
+    avarageEco2 = avarageValues[0]
+    avarageCelsius = avarageValues[2]
+    avarageTvoc = avarageValues[1]
+    print(avarageCelsius, avarageEco2, avarageTvoc)
+    
     temp_thres = user_config[0]
     eco2_thres = user_config[1]
 
     shouldWindowOpen = False
 
-    if (eco2 > eco2_thres):
+    if (avarageEco2 > eco2_thres):
         shouldWindowOpen = True
-    if(celcius > temp_thres):
+    if(avarageCelsius > temp_thres):
         shouldWindowOpen = True
     if(pop > 80):
         shouldWindowOpen = False
@@ -186,6 +190,8 @@ def main(delay = 0.5):
     #     draw.text((0, 15), 'U kunt de grenswaarden instellen in het dashboard.', fill='white')
 
     time.sleep(8)
+    
+    global last_open_close_time
 
     while True:
         # Collect sensor values
@@ -202,8 +208,9 @@ def main(delay = 0.5):
         #     draw.text((0, 0), "eCO2: ".format(eco2), fill='white')
 
         if (time.time() > last_open_close_time + open_close_wait_time):
-            pop = weather.get_weather_prediction()
-            # pop = 35
+            last_open_close_time = time.time()
+            # pop = weather.get_weather_prediction()
+            pop = 35
             shouldWindowOpen = should_window_open(conn, celcius, eco2, pop)
 
             # Buzz and open/close window

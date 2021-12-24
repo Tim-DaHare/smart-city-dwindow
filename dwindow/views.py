@@ -3,13 +3,14 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 
 
-from db import getLastReadings, create_connection, getUserConfig, setUserConfig
+from db import getLastReadings, create_connection, getUserConfig, setUserConfig, getAverageValues
 
 def dataReadings(request):
     conn = create_connection(r"sensor_dataset.db")
     # FIXME: check for missing conn and handle error
 
-    readings = getLastReadings(conn, 10)
+    readings = getLastReadings(conn, 30)
+    eco2Avg, tvocAvg, celsuisAverage = getAverageValues(conn)
 
     readingsJson = []
     for reading in readings:
@@ -22,7 +23,14 @@ def dataReadings(request):
 
     conn.close()
 
-    return JsonResponse({"data-readings": readingsJson})
+    return JsonResponse({
+        "data-readings": readingsJson,
+        "averages": {
+            "eco2": eco2Avg,
+            "temprature": celsuisAverage,
+            "tvoc": tvocAvg
+        }
+    })
 
 def getConfig(request):
     conn = create_connection(r"sensor_dataset.db")

@@ -21,7 +21,7 @@ LON = str(gcm.get_lat_lon(LOC_QUERY).get('lon'))
 # URL to the weather API
 DATA_URL = f'https://api.openweathermap.org/data/2.5/onecall?lat={LAT}&lon={LON}&units=metric&exclude=daily,minutely&appid={APP_ID}'
 # Weather data parsed to json
-GLOBAL_PARSED_DATA = requests.get(DATA_URL).json()
+# GLOBAL_PARSED_DATA = requests.get(DATA_URL).json()
 
 def get_weather_prediction():
     response = requests.get(DATA_URL).json()
